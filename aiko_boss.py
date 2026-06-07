@@ -44,6 +44,13 @@ CLAUDE_BIN = "claude"
 MODEL = os.environ.get("BOSS_MODEL", "claude-haiku-4-5-20251001")
 VOICE = os.environ.get("BOSS_VOICE", "Daniel")
 
+# Local neural TTS (Piper) — the demo's default voice: good, local, free, no key.
+# A British gatekeeper (alan); override the model file with PIPER_MODEL.
+_HERE = os.path.dirname(os.path.abspath(__file__))
+PIPER_BIN = os.path.join(_HERE, ".venv", "bin", "piper")
+PIPER_MODEL = os.environ.get(
+    "PIPER_MODEL", os.path.join(_HERE, "voices", "en_GB-alan-medium.onnx"))
+
 # --------------------------------------------------------------------------- #
 # The Boss's mind. This is the whole craft of the thing: a private rubric the
 # boss never recites, plus rules that make it *extract* the answer rather than
@@ -108,7 +115,13 @@ def speak(text, voice):
             _speak_elevenlabs(clean, key)
             return
         except Exception:
-            pass  # any hiccup -> fall back to local `say`
+            pass  # any hiccup -> fall back to a local voice
+    if os.path.exists(PIPER_BIN) and os.path.exists(PIPER_MODEL):
+        try:
+            _speak_piper(clean)
+            return
+        except Exception:
+            pass  # fall back to macOS `say`
     cmd = ["say"]
     if voice:
         cmd += ["-v", voice]
@@ -137,6 +150,17 @@ def _speak_elevenlabs(text, key):
     with open(path, "wb") as handle:
         handle.write(audio)
     subprocess.run(["afplay", path])
+
+
+def _speak_piper(text):
+    """Render a line with the local Piper neural voice and play it (afplay)."""
+    wav = tempfile.mktemp(suffix=".wav")
+    subprocess.run(
+        [PIPER_BIN, "-m", PIPER_MODEL, "-f", wav],
+        input=text, text=True,
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+    subprocess.run(["afplay", wav])
 
 
 # --------------------------------------------------------------------------- #
