@@ -97,14 +97,46 @@ def pick_voice(preferred):
 
 
 def speak(text, voice):
+    """Speak a line. Uses ElevenLabs if ELEVENLABS_API_KEY is set (a far better
+    voice for a room); otherwise falls back to macOS `say`."""
     clean = text.replace(VICTORY_TOKEN, "").strip()
     if not clean:
         return
+    key = os.environ.get("ELEVENLABS_API_KEY")
+    if key:
+        try:
+            _speak_elevenlabs(clean, key)
+            return
+        except Exception:
+            pass  # any hiccup -> fall back to local `say`
     cmd = ["say"]
     if voice:
         cmd += ["-v", voice]
     cmd.append(clean)
     subprocess.run(cmd)
+
+
+def _speak_elevenlabs(text, key):
+    """Render a line through ElevenLabs (low-latency turbo model) and play it."""
+    import urllib.request
+
+    voice_id = os.environ.get("ELEVENLABS_VOICE_ID", "JBFqnCBsd6RMkjVDRZzb")
+    request = urllib.request.Request(
+        f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}",
+        data=json.dumps({"text": text, "model_id": "eleven_turbo_v2_5"}).encode(),
+        headers={
+            "xi-api-key": key,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        audio = response.read()
+    path = tempfile.mktemp(suffix=".mp3")
+    with open(path, "wb") as handle:
+        handle.write(audio)
+    subprocess.run(["afplay", path])
 
 
 # --------------------------------------------------------------------------- #
@@ -116,12 +148,13 @@ def record(path):
     ffmpeg quits gracefully when it reads 'q' on stdin, which finalizes the
     wav header — important, or whisper sees a truncated file.
     """
-    print("🎙️  speak…  (press Enter when you're done)")
+    input("▶︎  Press ENTER, then speak…")
     proc = subprocess.Popen(
         ["ffmpeg", "-y", "-f", "avfoundation", "-i", MIC,
          "-ac", "1", "-ar", "16000", path],
         stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
+    print("●  recording…  (ENTER to send)")
     try:
         input()
     except (EOFError, KeyboardInterrupt):
