@@ -225,6 +225,9 @@ class BossSession:
     """
 
     def __init__(self):
+        # MAX_THINKING_TOKENS=0 disables Haiku's extended-thinking phase, which
+        # otherwise burns ~4s reasoning to itself before any answer text appears.
+        env = {**os.environ, "MAX_THINKING_TOKENS": "0"}
         self.proc = subprocess.Popen(
             [
                 CLAUDE_BIN, "-p",
@@ -234,6 +237,7 @@ class BossSession:
                 "--no-session-persistence",
                 "--input-format", "stream-json",
                 "--output-format", "stream-json",
+                "--include-partial-messages",  # stream text deltas, don't buffer
                 "--verbose",
             ],
             stdin=subprocess.PIPE,
@@ -242,6 +246,7 @@ class BossSession:
             text=True,
             bufsize=1,
             cwd="/tmp",
+            env=env,
         )
 
     def ask(self, user_text):
@@ -269,10 +274,12 @@ class BossSession:
             except ValueError:
                 continue  # skip any non-JSON noise
             etype = event.get("type")
-            if etype == "assistant":
-                for part in event.get("message", {}).get("content", []):
-                    if part.get("type") == "text" and part.get("text"):
-                        yield part["text"]
+            if etype == "stream_event":
+                inner = event.get("event", {})
+                if inner.get("type") == "content_block_delta":
+                    delta = inner.get("delta", {})
+                    if delta.get("type") == "text_delta" and delta.get("text"):
+                        yield delta["text"]  # stream the reply as it generates
             elif etype == "result":
                 return  # this turn is complete
 
