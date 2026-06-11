@@ -320,6 +320,7 @@ def cmd_new(subject):
         fh.write(text + "\n")
     book = parse_book(out_path)  # validates sections; exits with message if bad
     print(f"📖  Wrote {out_path}  ({book['title']})")
+    emit_graph(book)  # the knowledge under the book, in Engram's schema
     print("Read it, edit anything that feels off, then run `primer` here.")
 
 
@@ -330,6 +331,117 @@ def cmd_list():
         print(f"  {name}  —  {parse_book(path)['title']}")
     project = find_project_book(os.getcwd())
     print("\nHere:", project or "(no .primer.md walking up from $PWD)")
+
+
+# --------------------------------------------------------------------------- #
+# The knowledge graph under the book — Engram's schema, Engram's territory.
+# Engram (enspyrco/engram) owns memory: typed concept graph + per-concept FSRS.
+# The Primer owns conversation. The contract between them is these files:
+#   <book>.graph.json    concepts + relationships (Concept/Relationship.toJson)
+#   review_events.jsonl  trial outcomes as FSRS-ready review events
+# --------------------------------------------------------------------------- #
+REVIEW_EVENTS_PATH = os.path.join(_HERE, "review_events.jsonl")
+ENGRAM_TYPES = ("prerequisite generalization composition enables analogy "
+                "contrast relatedTo").split()
+
+
+def graph_path(book):
+    return re.sub(r"\.md$", "", book["path"]) + ".graph.json"
+
+
+GRAPH_PROMPT = """stdin contains a Primer 'book' — a teaching map of numbered
+waypoints. Convert its UNDERLYING KNOWLEDGE into a knowledge graph in Engram's
+schema. Output ONLY JSON:
+
+{{
+  "concepts": [{{ "id": "<kebab-slug>", "name": "...", "description": "one sentence",
+                 "sourceDocumentId": "{source}", "tags": ["waypoint:<N>"] }}],
+  "relationships": [{{ "id": "<from>--<type>--<to>", "fromConceptId": "...",
+                      "toConceptId": "...", "label": "short verb phrase",
+                      "type": "<one of: {types}>" }}]
+}}
+
+Rules: one or more concepts per waypoint (the real ideas, not the analogies);
+every concept tagged with its waypoint number; the road's ordering becomes
+prerequisite edges between waypoint cores; use the full type vocabulary where
+real relationships exist (analogy edges for the pictures are NOT wanted — only
+relationships between the mathematical/technical ideas themselves). 10-25
+concepts is the right granularity."""
+
+
+def emit_graph(book):
+    """Author the book's companion knowledge graph (Engram schema)."""
+    print("(mapping the knowledge under the book…)")
+    res = subprocess.run(
+        [CLAUDE_BIN, "-p",
+         GRAPH_PROMPT.format(source=os.path.basename(book["path"]),
+                             types=", ".join(ENGRAM_TYPES)),
+         "--output-format", "text"],
+        input=open(book["path"]).read(), capture_output=True, text=True,
+        timeout=10 * 60)
+    m = re.search(r"\{[\s\S]*\}", res.stdout)
+    if not m:
+        print("(graph authoring failed — no JSON in reply)")
+        return None
+    try:
+        data = json.loads(m.group(0))
+        ids = {c["id"] for c in data["concepts"]}
+        data["relationships"] = [
+            r for r in data["relationships"]
+            if r["fromConceptId"] in ids and r["toConceptId"] in ids
+            and r.get("type") in ENGRAM_TYPES]
+    except (ValueError, KeyError) as e:
+        print(f"(graph authoring failed — {e})")
+        return None
+    out = graph_path(book)
+    with open(out, "w") as fh:
+        json.dump(data, fh, indent=2)
+    print(f"🕸   Wrote {out}  ({len(data['concepts'])} concepts, "
+          f"{len(data['relationships'])} relationships — Engram schema)")
+    return out
+
+
+def load_graph(book):
+    try:
+        with open(graph_path(book)) as fh:
+            return json.load(fh)
+    except Exception:
+        return None
+
+
+def emit_review_events(book, waypoints, rating):
+    """Trial outcome -> FSRS-ready review events for the waypoints' concepts.
+    rating: 'again' (struggled) | 'good' (passed) | 'easy' (final gate)."""
+    graph = load_graph(book)
+    if not graph:
+        return
+    import datetime
+    tags = {f"waypoint:{w}" for w in waypoints}
+    hit = [c for c in graph["concepts"] if tags & set(c.get("tags", []))]
+    if not hit:
+        return
+    with open(REVIEW_EVENTS_PATH, "a") as fh:
+        for c in hit:
+            fh.write(json.dumps({
+                "ts": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+                "conceptId": c["id"],
+                "rating": rating,
+                "source": "primer-trial",
+                "book": book["title"],
+            }) + "\n")
+    print(f"🕸   ({len(hit)} review events → {os.path.basename(REVIEW_EVENTS_PATH)})")
+
+
+def waypoints_in(text):
+    """Waypoint numbers named in a summons brief, e.g. 'waypoints 1-2' / '3, 4'."""
+    if "FINAL" in text:
+        return ["FINAL"]
+    nums = set()
+    for a, b in re.findall(r"(\d+)\s*[-–]\s*(\d+)", text):
+        nums.update(range(int(a), int(b) + 1))
+    for n in re.findall(r"\d+", text):
+        nums.add(int(n))
+    return sorted(nums)
 
 
 # --------------------------------------------------------------------------- #
@@ -635,6 +747,7 @@ def read_book(book):
     transcript = ""
     floor = "primer"
     trial_lines = []
+    pending_waypoints = []
 
     progress = None
     try:
@@ -687,6 +800,7 @@ def read_book(book):
                 brief = extract_token_arg(line, SUMMON)
                 if brief is not None:
                     print("⚙️   (the Kernel is summoned)")
+                    pending_waypoints = waypoints_in(brief)
                     summons = ("You are summoned for a trial. Scope: " + brief
                                + "\nRecent exchanges:\n" + "\n".join(trial_lines)
                                + "\nOpen the trial now — address the learner directly.")
@@ -710,6 +824,21 @@ def read_book(book):
                 verdict = extract_token_arg(kline, TRIAL_DONE)
                 accepted = ACCEPTS in kline
                 if verdict is not None or accepted:
+                    # Engram bridge: trial outcome -> FSRS-ready review events.
+                    if accepted or pending_waypoints == ["FINAL"]:
+                        graph = load_graph(book)
+                        if graph:
+                            all_wp = sorted({int(t.split(":")[1])
+                                             for c in graph["concepts"]
+                                             for t in c.get("tags", [])
+                                             if t.startswith("waypoint:")})
+                            emit_review_events(book, all_wp,
+                                               "easy" if accepted else "good")
+                    elif pending_waypoints:
+                        rating = "again" if (verdict or "").startswith("struggled") else "good"
+                        emit_review_events(book, pending_waypoints, rating)
+                    pending_waypoints = []
+
                     report = ("(The Kernel reports: "
                               + ("FINAL GATE PASSED — all goals closed."
                                  if accepted else verdict)
@@ -745,6 +874,10 @@ def main():
         if "--subject" in args:
             subject = args[args.index("--subject") + 1]
         cmd_new(subject)
+        return
+    if args and args[0] == "graph":
+        arg = args[1] if len(args) > 1 else None
+        emit_graph(parse_book(resolve_book(arg)))
         return
     book_arg = None
     if "--book" in args:

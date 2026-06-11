@@ -6,3 +6,4 @@ __pycache__/
 progress/
 learner_notes.jsonl
 primer_progress.json
+review_events.jsonl

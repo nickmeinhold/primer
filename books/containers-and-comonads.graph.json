@@ -1,0 +1,483 @@
+{
+  "concepts": [
+    {
+      "id": "container",
+      "name": "Container",
+      "description": "A data structure described by two questions: what shapes can it take, and for each shape, what are the positions (slots) for data.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "container-extension",
+      "name": "Container extension",
+      "description": "The interpretation of a container as a concrete data type: pick a shape, then fill every position of that shape with a value.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "container-morphism",
+      "name": "Container morphism",
+      "description": "A map between containers given by a forward function on shapes paired with a backward function on positions.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:2"
+      ]
+    },
+    {
+      "id": "backward-position-maps",
+      "name": "Backward position maps",
+      "description": "In a container morphism, each output position names the input position it reads from, so a reshuffle can rearrange but never invent data.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:2"
+      ]
+    },
+    {
+      "id": "representation-theorem",
+      "name": "Representation theorem for polymorphic functions",
+      "description": "Every polymorphic function between container extensions is exactly a container morphism: a shape map plus backward position maps.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:2"
+      ]
+    },
+    {
+      "id": "non-fabrication-typing",
+      "name": "Non-fabrication as a type-checkable property",
+      "description": "The guarantee that code cannot fabricate data is expressible and checkable at the type level via backward position maps.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:2"
+      ]
+    },
+    {
+      "id": "directed-container",
+      "name": "Directed container",
+      "description": "A container in which every position knows the view from there, equipped with down, root, and plus operations satisfying navigation laws.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "subshape-down",
+      "name": "Down (sub-shape at a position)",
+      "description": "The operation assigning to each position of a shape the sub-shape visible from that position.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "root-position",
+      "name": "Root position",
+      "description": "The distinguished stay-here position of every shape in a directed container.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "position-plus",
+      "name": "Plus (position composition)",
+      "description": "The operation composing two legs of a journey through positions into a single position.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "navigation-laws",
+      "name": "Navigation laws",
+      "description": "The directed-container laws: staying put changes nothing and journeys compose associatively.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "comonad",
+      "name": "Comonad",
+      "description": "A structure for a value in a context, given by extract and duplicate operations satisfying three laws.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:4"
+      ]
+    },
+    {
+      "id": "extract",
+      "name": "Extract",
+      "description": "The comonad operation that reads the value at the current focus of a context.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:4"
+      ]
+    },
+    {
+      "id": "duplicate",
+      "name": "Duplicate",
+      "description": "The comonad operation that hands every position its own view-from-there copy of the whole context.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:4"
+      ]
+    },
+    {
+      "id": "comonad-laws",
+      "name": "Comonad laws",
+      "description": "The three coherence laws: read-after-refocus returns the focus, refocus-everywhere-then-read changes nothing, and the two double-refocusings agree.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:4"
+      ]
+    },
+    {
+      "id": "container-comonad-correspondence",
+      "name": "Directed containers are container comonads (Ahman\u2013Chapman\u2013Uustalu)",
+      "description": "Directed containers and comonad structures on container functors are two descriptions of one object, with root becoming extract and down-plus-plus becoming duplicate.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:5"
+      ]
+    },
+    {
+      "id": "equivalence-not-isomorphism",
+      "name": "Equivalence, not isomorphism",
+      "description": "The precise strength of the correspondence is an equivalence (comonoids in the category of containers), and claiming an isomorphism of categories overstates it.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:5"
+      ]
+    },
+    {
+      "id": "mechanical-gap-detection",
+      "name": "Mechanical gap detection",
+      "description": "Surfacing missing bridges in a knowledge graph mechanically, so a detected gap reflects the corpus rather than the detector's background knowledge.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "honest-rediscovery",
+      "name": "Honest rediscovery declaration",
+      "description": "A proposing agent must declare when its result already exists in the literature and cite it, rather than presenting a rediscovery as novel.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "detection-vs-verdict",
+      "name": "Detection is not verdict",
+      "description": "A review panel can individually detect a flaw yet still pass it when majority-vote aggregation outvotes its own skeptic \u2014 an aggregation failure, not a detection failure.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "lens-veto",
+      "name": "Lens veto",
+      "description": "An aggregation rule giving a specialist reviewing lens the power to block a verdict regardless of the majority, repairing the detection-versus-verdict failure.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "cross-family-review",
+      "name": "Cross-model-family review",
+      "description": "Review by foreign model families catches overstatements that same-family reviewers read straight past.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "kernel-gate",
+      "name": "Kernel gate",
+      "description": "A proof-kernel checkpoint where the model proposes and a machine-checked prover (Lean) disposes, verifying each claimed proof obligation.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    },
+    {
+      "id": "scope-honesty",
+      "name": "Scope honesty",
+      "description": "A verification report must state exactly what was checked and no more, such as proving only the forward direction of a correspondence.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    },
+    {
+      "id": "trust-as-checkable-artifact",
+      "name": "Trust as a checkable artifact",
+      "description": "Assurance grounded in machine-checkable artifacts rather than confidence or feeling.",
+      "sourceDocumentId": "containers-and-comonads.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "container--prerequisite--container-morphism",
+      "fromConceptId": "container",
+      "toConceptId": "container-morphism",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "container-morphism--prerequisite--directed-container",
+      "fromConceptId": "container-morphism",
+      "toConceptId": "directed-container",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "directed-container--prerequisite--comonad",
+      "fromConceptId": "directed-container",
+      "toConceptId": "comonad",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "comonad--prerequisite--container-comonad-correspondence",
+      "fromConceptId": "comonad",
+      "toConceptId": "container-comonad-correspondence",
+      "label": "is one side of",
+      "type": "prerequisite"
+    },
+    {
+      "id": "directed-container--prerequisite--container-comonad-correspondence",
+      "fromConceptId": "directed-container",
+      "toConceptId": "container-comonad-correspondence",
+      "label": "is one side of",
+      "type": "prerequisite"
+    },
+    {
+      "id": "container-comonad-correspondence--prerequisite--honest-rediscovery",
+      "fromConceptId": "container-comonad-correspondence",
+      "toConceptId": "honest-rediscovery",
+      "label": "is the subject matter for",
+      "type": "prerequisite"
+    },
+    {
+      "id": "honest-rediscovery--prerequisite--kernel-gate",
+      "fromConceptId": "honest-rediscovery",
+      "toConceptId": "kernel-gate",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "container--enables--container-extension",
+      "fromConceptId": "container",
+      "toConceptId": "container-extension",
+      "label": "determines",
+      "type": "enables"
+    },
+    {
+      "id": "backward-position-maps--composition--container-morphism",
+      "fromConceptId": "backward-position-maps",
+      "toConceptId": "container-morphism",
+      "label": "supply the position half of",
+      "type": "composition"
+    },
+    {
+      "id": "representation-theorem--relatedTo--container-morphism",
+      "fromConceptId": "representation-theorem",
+      "toConceptId": "container-morphism",
+      "label": "characterizes polymorphic reshuffles as",
+      "type": "relatedTo"
+    },
+    {
+      "id": "representation-theorem--relatedTo--container-extension",
+      "fromConceptId": "representation-theorem",
+      "toConceptId": "container-extension",
+      "label": "classifies all polymorphic maps between",
+      "type": "relatedTo"
+    },
+    {
+      "id": "backward-position-maps--enables--non-fabrication-typing",
+      "fromConceptId": "backward-position-maps",
+      "toConceptId": "non-fabrication-typing",
+      "label": "make type-checkable",
+      "type": "enables"
+    },
+    {
+      "id": "representation-theorem--enables--non-fabrication-typing",
+      "fromConceptId": "representation-theorem",
+      "toConceptId": "non-fabrication-typing",
+      "label": "extends to every polymorphic function",
+      "type": "enables"
+    },
+    {
+      "id": "non-fabrication-typing--enables--trust-as-checkable-artifact",
+      "fromConceptId": "non-fabrication-typing",
+      "toConceptId": "trust-as-checkable-artifact",
+      "label": "is the embryo of",
+      "type": "enables"
+    },
+    {
+      "id": "directed-container--generalization--container",
+      "fromConceptId": "directed-container",
+      "toConceptId": "container",
+      "label": "is a special kind of",
+      "type": "generalization"
+    },
+    {
+      "id": "subshape-down--composition--directed-container",
+      "fromConceptId": "subshape-down",
+      "toConceptId": "directed-container",
+      "label": "is a component of",
+      "type": "composition"
+    },
+    {
+      "id": "root-position--composition--directed-container",
+      "fromConceptId": "root-position",
+      "toConceptId": "directed-container",
+      "label": "is a component of",
+      "type": "composition"
+    },
+    {
+      "id": "position-plus--composition--directed-container",
+      "fromConceptId": "position-plus",
+      "toConceptId": "directed-container",
+      "label": "is a component of",
+      "type": "composition"
+    },
+    {
+      "id": "navigation-laws--composition--directed-container",
+      "fromConceptId": "navigation-laws",
+      "toConceptId": "directed-container",
+      "label": "govern the operations of",
+      "type": "composition"
+    },
+    {
+      "id": "extract--composition--comonad",
+      "fromConceptId": "extract",
+      "toConceptId": "comonad",
+      "label": "is an operation of",
+      "type": "composition"
+    },
+    {
+      "id": "duplicate--composition--comonad",
+      "fromConceptId": "duplicate",
+      "toConceptId": "comonad",
+      "label": "is an operation of",
+      "type": "composition"
+    },
+    {
+      "id": "comonad-laws--composition--comonad",
+      "fromConceptId": "comonad-laws",
+      "toConceptId": "comonad",
+      "label": "govern the operations of",
+      "type": "composition"
+    },
+    {
+      "id": "root-position--relatedTo--extract",
+      "fromConceptId": "root-position",
+      "toConceptId": "extract",
+      "label": "becomes, under the correspondence",
+      "type": "relatedTo"
+    },
+    {
+      "id": "subshape-down--relatedTo--duplicate",
+      "fromConceptId": "subshape-down",
+      "toConceptId": "duplicate",
+      "label": "combines with plus to build",
+      "type": "relatedTo"
+    },
+    {
+      "id": "position-plus--relatedTo--duplicate",
+      "fromConceptId": "position-plus",
+      "toConceptId": "duplicate",
+      "label": "combines with down to build",
+      "type": "relatedTo"
+    },
+    {
+      "id": "navigation-laws--enables--comonad-laws",
+      "fromConceptId": "navigation-laws",
+      "toConceptId": "comonad-laws",
+      "label": "prove, one for one",
+      "type": "enables"
+    },
+    {
+      "id": "equivalence-not-isomorphism--contrast--container-comonad-correspondence",
+      "fromConceptId": "equivalence-not-isomorphism",
+      "toConceptId": "container-comonad-correspondence",
+      "label": "sharpens the claimed strength of",
+      "type": "contrast"
+    },
+    {
+      "id": "mechanical-gap-detection--enables--honest-rediscovery",
+      "fromConceptId": "mechanical-gap-detection",
+      "toConceptId": "honest-rediscovery",
+      "label": "surfaces the genuine gap behind",
+      "type": "enables"
+    },
+    {
+      "id": "honest-rediscovery--relatedTo--container-comonad-correspondence",
+      "fromConceptId": "honest-rediscovery",
+      "toConceptId": "container-comonad-correspondence",
+      "label": "re-derives with citation",
+      "type": "relatedTo"
+    },
+    {
+      "id": "cross-family-review--enables--equivalence-not-isomorphism",
+      "fromConceptId": "cross-family-review",
+      "toConceptId": "equivalence-not-isomorphism",
+      "label": "caught the overstatement corrected by",
+      "type": "enables"
+    },
+    {
+      "id": "detection-vs-verdict--enables--lens-veto",
+      "fromConceptId": "detection-vs-verdict",
+      "toConceptId": "lens-veto",
+      "label": "motivates",
+      "type": "enables"
+    },
+    {
+      "id": "detection-vs-verdict--contrast--cross-family-review",
+      "fromConceptId": "detection-vs-verdict",
+      "toConceptId": "cross-family-review",
+      "label": "fails inside what diversity fixes across",
+      "type": "contrast"
+    },
+    {
+      "id": "kernel-gate--relatedTo--container-comonad-correspondence",
+      "fromConceptId": "kernel-gate",
+      "toConceptId": "container-comonad-correspondence",
+      "label": "machine-checks the forward direction of",
+      "type": "relatedTo"
+    },
+    {
+      "id": "scope-honesty--composition--kernel-gate",
+      "fromConceptId": "scope-honesty",
+      "toConceptId": "kernel-gate",
+      "label": "is built into the report of",
+      "type": "composition"
+    },
+    {
+      "id": "kernel-gate--enables--trust-as-checkable-artifact",
+      "fromConceptId": "kernel-gate",
+      "toConceptId": "trust-as-checkable-artifact",
+      "label": "instantiates",
+      "type": "enables"
+    },
+    {
+      "id": "scope-honesty--enables--trust-as-checkable-artifact",
+      "fromConceptId": "scope-honesty",
+      "toConceptId": "trust-as-checkable-artifact",
+      "label": "keeps honest",
+      "type": "enables"
+    }
+  ]
+}
