@@ -68,12 +68,19 @@ PIPER_BIN = os.path.join(_HERE, ".venv", "bin", "piper")
 PRIMER_PIPER = os.path.join(_HERE, "voices", "en_GB-alan-medium.onnx")
 KERNEL_PIPER = os.path.join(_HERE, "voices", "en_US-ryan-medium.onnx")
 
+# The learner's file — a cross-book profile the Primer maintains about its
+# reader, plus the raw margin-notes log it is distilled from.
+LEARNER_PATH = os.path.join(_HERE, "learner.md")
+NOTES_PATH = os.path.join(_HERE, "learner_notes.jsonl")
+
 # Tokens — the wire protocol between the two minds and the loop.
 SUMMON = "[SUMMON KERNEL:"
 TRIAL_DONE = "[TRIAL COMPLETE:"
 ACCEPTS = "[KERNEL ACCEPTS]"
 RESTS = "[THE BOOK RESTS]"
-_TOKEN_RE = re.compile(r"\[(SUMMON KERNEL|TRIAL COMPLETE)[^\]]*\]"
+NOTE = "[NOTE LEARNER:"      # either mind -> margin note about the learner
+AMEND = "[AMEND BOOK:"       # Primer -> rewrite the book file itself
+_TOKEN_RE = re.compile(r"\[(SUMMON KERNEL|TRIAL COMPLETE|NOTE LEARNER|AMEND BOOK)[^\]]*\]"
                        r"|\[KERNEL ACCEPTS\]|\[THE BOOK RESTS\]")
 
 
@@ -168,11 +175,26 @@ def progress_path(book):
 # --------------------------------------------------------------------------- #
 # The two minds, templated from the book
 # --------------------------------------------------------------------------- #
+def learner_profile():
+    """The cross-book learner file, if it exists."""
+    try:
+        return open(LEARNER_PATH).read().strip()
+    except Exception:
+        return "(no learner file yet — observe and take notes)"
+
+
 def primer_system(book):
     return f"""You are THE ILLUSTRATED PRIMER — a patient, story-loving book that speaks aloud. You are first a TEACHER. Your subject: {book['title']}.
 
-WHO THE LEARNER IS:
+WHO THE LEARNER IS (this book's register notes):
 {book['learner']}
+
+THE LEARNER'S FILE (what previous sessions — across ALL books — have taught you about this learner; trust it, it is hard-won):
+{learner_profile()}
+
+THE MARGIN NOTES (how the book learns its reader): whenever you observe something DURABLE about the learner — a picture that landed or fell flat, a pace preference, a recurring trip-wire, vocabulary that is home ground or foreign, what restores them after a wobble — record it by including, anywhere in your reply, the exact token [NOTE LEARNER: <one concise observation>]. Take at most one or two notes per session stretch; only durable observations, never session trivia. The notes are silent — never mention aloud that you are taking them.
+
+AMENDING THE BOOK (the learner may rewrite this very book through you): if the learner asks to change the book — add or reorder waypoints, fix an analogy that is wrong or stale, correct an error, retune the opener — first agree the change in conversation, briefly. Once agreed, include the exact token [AMEND BOOK: <a precise, self-contained instruction for an editor who has the book in front of them>] and tell the learner, in-fiction, that the page is rewriting itself and will read that way from the next opening of the book (the current conversation keeps its present page).
 
 WHY THIS STORY IS THE LEARNER'S (make them the protagonist throughout):
 {book['story']}
@@ -208,6 +230,11 @@ def kernel_system(book):
     return f"""You are THE KERNEL — a proof kernel given a voice; the examiner who lives in the back of an illustrated Primer teaching: {book['title']}.
 
 Your character: you are a kernel. You are not angry and you are not kind; you only type-check. You speak in short, precise, faintly liturgical sentences ("That does not type-check." / "Unification succeeded. Continue."). You never accept rhetoric in place of mechanism.
+
+THE LEARNER'S FILE (what previous sessions know about this learner — calibrate your strikes and your warmth with it):
+{learner_profile()}
+
+You may also record a durable observation about the learner (a joint that reliably trips them, what restores them, a strength worth leaning on) by including the exact token [NOTE LEARNER: <one concise observation>] in a reply. At most one per trial; silent — never mention it aloud.
 
 THE COMPLETE ANSWER (your PRIVATE rubric — never recite it; drag each piece out of the learner one joint at a time, holding them to mechanism, not vague paraphrase):
 {book['map']}
@@ -482,6 +509,98 @@ def extract_token_arg(text, token_prefix):
     return text[start + len(token_prefix):end].strip() if end != -1 else ""
 
 
+def extract_all_token_args(text, token_prefix):
+    """All payloads for a repeatable token (e.g. several margin notes)."""
+    out, pos = [], 0
+    while True:
+        start = text.find(token_prefix, pos)
+        if start == -1:
+            return out
+        end = text.find("]", start)
+        if end == -1:
+            return out
+        out.append(text[start + len(token_prefix):end].strip())
+        pos = end + 1
+
+
+def collect_notes(line, book, who):
+    """Margin notes: append any [NOTE LEARNER: ...] payloads to the raw log."""
+    notes = extract_all_token_args(line, NOTE)
+    for n in notes:
+        if not n:
+            continue
+        with open(NOTES_PATH, "a") as fh:
+            fh.write(json.dumps({"book": book["title"], "by": who, "note": n}) + "\n")
+        print("✎   (the book makes a note in its margin)")
+    return bool(notes)
+
+
+def apply_amendment(book, instruction):
+    """Rewrite the book file per the Primer's amendment instruction.
+    Validates the result parses before overwriting; effective next session."""
+    print("✍️   (the book is rewriting a page…)")
+    original = open(book["path"]).read()
+    res = subprocess.run(
+        [CLAUDE_BIN, "-p",
+         "You are the editor of a Primer 'book' (markdown with sections: "
+         "# Title, ## learner, ## story, ## map, ## mastery, ## opener). "
+         "Apply this amendment, agreed with the learner, faithfully and "
+         "minimally — change what the amendment asks and nothing else:\n\n"
+         f"AMENDMENT: {instruction}\n\n"
+         "stdin contains the current book. Output ONLY the complete revised "
+         "markdown document — no preamble, no code fences.",
+         "--output-format", "text"],
+        input=original, capture_output=True, text=True, timeout=10 * 60)
+    text = re.sub(r"^```(markdown)?\n?|```\s*$", "", res.stdout.strip(), flags=re.M).strip()
+    if not text.startswith("#"):
+        print("(the page resisted — amendment failed, book unchanged)")
+        return
+    tmp = book["path"] + ".amending"
+    with open(tmp, "w") as fh:
+        fh.write(text + "\n")
+    try:
+        parse_book(tmp)  # SystemExit if the revision broke the format
+    except SystemExit:
+        os.unlink(tmp)
+        print("(the revision broke the book's structure — discarded, book unchanged)")
+        return
+    os.replace(tmp, book["path"])
+    print(f"✍️   (page rewritten: {book['path']} — effective next reading)")
+
+
+def merge_learner_file(transcript):
+    """Close of session: distil new margin notes + the conversation into the
+    cross-book learner file. The file is rewritten as a whole, capped short."""
+    try:
+        notes = ""
+        if os.path.exists(NOTES_PATH):
+            notes = open(NOTES_PATH).read()
+        current = learner_profile()
+        merged = subprocess.run(
+            [CLAUDE_BIN, "-p",
+             "You maintain the LEARNER'S FILE for an Illustrated Primer — a "
+             "living cross-subject profile of one learner, read by the teacher "
+             "at the start of every session. stdin has three parts: the current "
+             "file, the raw margin notes (newest at the bottom), and the tail "
+             "of today's session transcript. Rewrite the file: merge new "
+             "durable observations, drop duplicates, let newer evidence refine "
+             "or overturn older lines, keep it under 40 lines of plain "
+             "markdown bullets grouped by theme (pictures that land / pace / "
+             "trip-wires / what restores them / strengths). No session trivia, "
+             "no dates unless load-bearing. Output ONLY the file.",
+             "--model", "claude-haiku-4-5-20251001", "--output-format", "text"],
+            input=("=== CURRENT FILE ===\n" + current
+                   + "\n\n=== MARGIN NOTES ===\n" + notes
+                   + "\n\n=== SESSION TAIL ===\n" + transcript[-5000:]),
+            capture_output=True, text=True, timeout=120).stdout.strip()
+        if merged and len(merged) > 40:
+            with open(LEARNER_PATH, "w") as fh:
+                fh.write(merged + "\n")
+            print(f"(the book updates what it knows of you: {LEARNER_PATH})")
+    except Exception:
+        pass  # the learner file must never crash the book
+
+
 def save_progress(book, transcript):
     try:
         note = subprocess.run(
@@ -560,6 +679,11 @@ def read_book(book):
                 transcript += "PRIMER: " + line + "\n"
                 trial_lines = (trial_lines + ["PRIMER: " + line])[-12:]
 
+                collect_notes(line, book, "primer")
+                amendment = extract_token_arg(line, AMEND)
+                if amendment:
+                    apply_amendment(book, amendment)
+
                 brief = extract_token_arg(line, SUMMON)
                 if brief is not None:
                     print("⚙️   (the Kernel is summoned)")
@@ -582,6 +706,7 @@ def read_book(book):
                 transcript += "KERNEL: " + kline + "\n"
                 trial_lines = (trial_lines + ["KERNEL: " + kline])[-12:]
 
+                collect_notes(kline, book, "kernel")
                 verdict = extract_token_arg(kline, TRIAL_DONE)
                 accepted = ACCEPTS in kline
                 if verdict is not None or accepted:
@@ -601,6 +726,7 @@ def read_book(book):
         kernel.close()
         if transcript:
             save_progress(book, transcript)
+            merge_learner_file(transcript)
 
 
 # --------------------------------------------------------------------------- #

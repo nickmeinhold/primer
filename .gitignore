@@ -3,3 +3,6 @@ voices/*.onnx
 voices/*.onnx.json
 __pycache__/
 *.pyc
+progress/
+learner_notes.jsonl
+primer_progress.json
