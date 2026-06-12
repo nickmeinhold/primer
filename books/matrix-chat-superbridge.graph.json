@@ -1,0 +1,455 @@
+{
+  "concepts": [
+    {
+      "id": "bridged-room-mirroring",
+      "name": "Bridged room mirroring",
+      "description": "Every bridged remote chat requires a Matrix room to mirror it, and the central design question is who owns that room.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "portal-room",
+      "name": "Portal room",
+      "description": "A Matrix room created, owned, and state-enforced by a bridge to mirror a remote chat.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "plumbing-room",
+      "name": "Plumbing room",
+      "description": "A user-created Matrix room into which bridges are invited as guests to attach remote chats.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "e2ee-bridging-tension",
+      "name": "E2EE\u2013bridging tension",
+      "description": "Bridges must read message plaintext to carry it, so end-to-end encrypting a bridged room hands the bridge ciphertext and silences it.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "bridge-bot-power-level",
+      "name": "Bridge bot power level 50",
+      "description": "Granting bridge bots power level 50 clears state_default so they can attach plumbing, without the admin-level power that would let them demote the room owner.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:1"
+      ]
+    },
+    {
+      "id": "discord-plumbing-bridge",
+      "name": "Standalone Discord plumbing bridge",
+      "description": "The standalone Discord bridge predates the bridgev2 rewrite and still supports plumbing, attaching a Discord channel to a user-owned room via a bridge command.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:2"
+      ]
+    },
+    {
+      "id": "relay-webhooks",
+      "name": "Relay webhooks",
+      "description": "Relay webhooks let non-logged-in Matrix users appear in Discord under their own names and avatars instead of being quoted aloud by the bridge bot.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:2"
+      ]
+    },
+    {
+      "id": "megabridge-core",
+      "name": "bridgev2 megabridge core",
+      "description": "bridgev2 is the shared Go core the mautrix bridges were rewritten onto, centralizing portal, login, and relay behavior.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "split-portal-receiver",
+      "name": "Split portals and the receiver",
+      "description": "In bridgev2 every portal belongs to the specific login it was bridged through, called the receiver.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "receiver-relay-lock",
+      "name": "Receiver relay lock",
+      "description": "Only the receiver login of a split portal may relay messages on behalf of users who are not logged in to the bridge.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "bot-first-bridging",
+      "name": "Bot-first bridging order",
+      "description": "Bridging through a dedicated bot login before any personal login makes the bot the receiver, so relay rights permanently follow the bot.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "unset-relay-panic",
+      "name": "unset-relay nil-pointer panic",
+      "description": "mautrix v0.27.0's unset-relay command crashed with a nil-pointer panic yet still cleared the relay setting as a side effect before dying.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:3"
+      ]
+    },
+    {
+      "id": "portal-only-design",
+      "name": "Portal-only core design",
+      "description": "The bridgev2 core supports only bridge-owned portal rooms; plumbing was deliberately designed out rather than left unimplemented.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:4"
+      ]
+    },
+    {
+      "id": "enforced-sync",
+      "name": "Enforced portal sync",
+      "description": "Exclusive bridge ownership lets the bridge keep a room's name, avatar, and membership authoritatively in sync, reverting outside edits including direct database changes.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:4"
+      ]
+    },
+    {
+      "id": "relay-appservice",
+      "name": "Relay appservice",
+      "description": "A custom Matrix appservice that listens in bridge-owned portal rooms and re-speaks every message into a user-owned hub room, rebuilding plumbing one layer above the bridges.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:5"
+      ]
+    },
+    {
+      "id": "identity-puppets",
+      "name": "Identity puppets",
+      "description": "Namespaced appservice users that re-speak relayed messages while wearing the original sender's display name and avatar.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:5"
+      ]
+    },
+    {
+      "id": "hub-spoke-config",
+      "name": "Hub/spoke configuration separation",
+      "description": "Relay configuration names portal rooms as spokes and one hub room separately, and the hub must never appear in the portal list or the relay feeds on its own output.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:5"
+      ]
+    },
+    {
+      "id": "relay-echo-loop",
+      "name": "Relay echo loop",
+      "description": "A relay that hears its own output relays its relays, spawning exponentially multiplying copies of every message.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "self-puppet-ward",
+      "name": "Self-puppet ward",
+      "description": "The relay must ignore messages from its own puppet namespace because those messages are its own output.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "bridge-ghost-ward",
+      "name": "Bridge-ghost ward",
+      "description": "The relay must ignore bridge bots and their ghost users, since the megabridge already delivered those messages and re-relaying them builds a cross-bridge loop.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "attribution-prefix-ward",
+      "name": "Attribution-prefix ward",
+      "description": "A 'Name: ' attribution prefix is a wire-format flag meaning some relay already spoke the message once, so prefixed messages must never be relayed again.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:6"
+      ]
+    },
+    {
+      "id": "per-room-event-identity",
+      "name": "Per-room event identity",
+      "description": "Matrix event identity is per-room: a relayed message becomes a distinct new event in every room it lands in, with no global notion of 'this message'.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    },
+    {
+      "id": "relay-event-map",
+      "name": "Relay event map",
+      "description": "A SQLite map of sibling event IDs across rooms lets the relay re-point replies and reactions room by room so threading survives relaying.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    },
+    {
+      "id": "double-puppeting",
+      "name": "Double puppeting",
+      "description": "When a bridge-logged-in user sends from their native app the message arrives as their real Matrix account, and the relay must look up their platform puppet to present the right identity in each world.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    },
+    {
+      "id": "hybrid-bridging-architecture",
+      "name": "Hybrid bridging architecture",
+      "description": "The complete design uses plumbing where bridges permit it, puppet relaying where they force portals, and echo wards throughout to bind many platforms into one room.",
+      "sourceDocumentId": "matrix-chat-superbridge.md",
+      "tags": [
+        "waypoint:7"
+      ]
+    }
+  ],
+  "relationships": [
+    {
+      "id": "bridged-room-mirroring--prerequisite--discord-plumbing-bridge",
+      "fromConceptId": "bridged-room-mirroring",
+      "toConceptId": "discord-plumbing-bridge",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "discord-plumbing-bridge--prerequisite--megabridge-core",
+      "fromConceptId": "discord-plumbing-bridge",
+      "toConceptId": "megabridge-core",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "megabridge-core--prerequisite--portal-only-design",
+      "fromConceptId": "megabridge-core",
+      "toConceptId": "portal-only-design",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "portal-only-design--prerequisite--relay-appservice",
+      "fromConceptId": "portal-only-design",
+      "toConceptId": "relay-appservice",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "relay-appservice--prerequisite--relay-echo-loop",
+      "fromConceptId": "relay-appservice",
+      "toConceptId": "relay-echo-loop",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "relay-echo-loop--prerequisite--hybrid-bridging-architecture",
+      "fromConceptId": "relay-echo-loop",
+      "toConceptId": "hybrid-bridging-architecture",
+      "label": "must be understood before",
+      "type": "prerequisite"
+    },
+    {
+      "id": "portal-room--contrast--plumbing-room",
+      "fromConceptId": "portal-room",
+      "toConceptId": "plumbing-room",
+      "label": "opposes ownership model of",
+      "type": "contrast"
+    },
+    {
+      "id": "portal-room--generalization--bridged-room-mirroring",
+      "fromConceptId": "portal-room",
+      "toConceptId": "bridged-room-mirroring",
+      "label": "is one answer to",
+      "type": "generalization"
+    },
+    {
+      "id": "plumbing-room--generalization--bridged-room-mirroring",
+      "fromConceptId": "plumbing-room",
+      "toConceptId": "bridged-room-mirroring",
+      "label": "is one answer to",
+      "type": "generalization"
+    },
+    {
+      "id": "bridge-bot-power-level--enables--plumbing-room",
+      "fromConceptId": "bridge-bot-power-level",
+      "toConceptId": "plumbing-room",
+      "label": "lets bridges attach to",
+      "type": "enables"
+    },
+    {
+      "id": "e2ee-bridging-tension--relatedTo--bridged-room-mirroring",
+      "fromConceptId": "e2ee-bridging-tension",
+      "toConceptId": "bridged-room-mirroring",
+      "label": "forces bridged rooms unencrypted",
+      "type": "relatedTo"
+    },
+    {
+      "id": "discord-plumbing-bridge--composition--relay-webhooks",
+      "fromConceptId": "discord-plumbing-bridge",
+      "toConceptId": "relay-webhooks",
+      "label": "gains native identity through",
+      "type": "composition"
+    },
+    {
+      "id": "megabridge-core--composition--split-portal-receiver",
+      "fromConceptId": "megabridge-core",
+      "toConceptId": "split-portal-receiver",
+      "label": "assigns portal ownership via",
+      "type": "composition"
+    },
+    {
+      "id": "split-portal-receiver--enables--receiver-relay-lock",
+      "fromConceptId": "split-portal-receiver",
+      "toConceptId": "receiver-relay-lock",
+      "label": "restricts relaying through",
+      "type": "enables"
+    },
+    {
+      "id": "receiver-relay-lock--prerequisite--bot-first-bridging",
+      "fromConceptId": "receiver-relay-lock",
+      "toConceptId": "bot-first-bridging",
+      "label": "necessitates",
+      "type": "prerequisite"
+    },
+    {
+      "id": "unset-relay-panic--relatedTo--receiver-relay-lock",
+      "fromConceptId": "unset-relay-panic",
+      "toConceptId": "receiver-relay-lock",
+      "label": "blocked recovery from",
+      "type": "relatedTo"
+    },
+    {
+      "id": "portal-room--enables--enforced-sync",
+      "fromConceptId": "portal-room",
+      "toConceptId": "enforced-sync",
+      "label": "exclusive ownership makes possible",
+      "type": "enables"
+    },
+    {
+      "id": "portal-only-design--enables--enforced-sync",
+      "fromConceptId": "portal-only-design",
+      "toConceptId": "enforced-sync",
+      "label": "guarantees",
+      "type": "enables"
+    },
+    {
+      "id": "portal-only-design--contrast--plumbing-room",
+      "fromConceptId": "portal-only-design",
+      "toConceptId": "plumbing-room",
+      "label": "deliberately excludes",
+      "type": "contrast"
+    },
+    {
+      "id": "receiver-relay-lock--analogy--portal-only-design",
+      "fromConceptId": "receiver-relay-lock",
+      "toConceptId": "portal-only-design",
+      "label": "same exclusive-ownership principle at another scale",
+      "type": "analogy"
+    },
+    {
+      "id": "relay-appservice--composition--identity-puppets",
+      "fromConceptId": "relay-appservice",
+      "toConceptId": "identity-puppets",
+      "label": "speaks through",
+      "type": "composition"
+    },
+    {
+      "id": "relay-appservice--composition--hub-spoke-config",
+      "fromConceptId": "relay-appservice",
+      "toConceptId": "hub-spoke-config",
+      "label": "is wired by",
+      "type": "composition"
+    },
+    {
+      "id": "relay-appservice--composition--relay-event-map",
+      "fromConceptId": "relay-appservice",
+      "toConceptId": "relay-event-map",
+      "label": "tracks message copies with",
+      "type": "composition"
+    },
+    {
+      "id": "identity-puppets--analogy--relay-webhooks",
+      "fromConceptId": "identity-puppets",
+      "toConceptId": "relay-webhooks",
+      "label": "both restore sender identity across a bridge",
+      "type": "analogy"
+    },
+    {
+      "id": "self-puppet-ward--relatedTo--relay-echo-loop",
+      "fromConceptId": "self-puppet-ward",
+      "toConceptId": "relay-echo-loop",
+      "label": "prevents self-echo form of",
+      "type": "relatedTo"
+    },
+    {
+      "id": "bridge-ghost-ward--relatedTo--relay-echo-loop",
+      "fromConceptId": "bridge-ghost-ward",
+      "toConceptId": "relay-echo-loop",
+      "label": "prevents cross-bridge form of",
+      "type": "relatedTo"
+    },
+    {
+      "id": "attribution-prefix-ward--relatedTo--relay-echo-loop",
+      "fromConceptId": "attribution-prefix-ward",
+      "toConceptId": "relay-echo-loop",
+      "label": "prevents relay-to-relay form of",
+      "type": "relatedTo"
+    },
+    {
+      "id": "hub-spoke-config--relatedTo--relay-echo-loop",
+      "fromConceptId": "hub-spoke-config",
+      "toConceptId": "relay-echo-loop",
+      "label": "misconfiguration creates",
+      "type": "relatedTo"
+    },
+    {
+      "id": "per-room-event-identity--prerequisite--relay-event-map",
+      "fromConceptId": "per-room-event-identity",
+      "toConceptId": "relay-event-map",
+      "label": "necessitates",
+      "type": "prerequisite"
+    },
+    {
+      "id": "double-puppeting--relatedTo--identity-puppets",
+      "fromConceptId": "double-puppeting",
+      "toConceptId": "identity-puppets",
+      "label": "requires lookup of",
+      "type": "relatedTo"
+    },
+    {
+      "id": "hybrid-bridging-architecture--composition--plumbing-room",
+      "fromConceptId": "hybrid-bridging-architecture",
+      "toConceptId": "plumbing-room",
+      "label": "uses where bridges allow",
+      "type": "composition"
+    },
+    {
+      "id": "hybrid-bridging-architecture--composition--relay-appservice",
+      "fromConceptId": "hybrid-bridging-architecture",
+      "toConceptId": "relay-appservice",
+      "label": "uses where portals are forced",
+      "type": "composition"
+    }
+  ]
+}
